@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenVeg Market</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f2f8f0;
+  color: #253629;
+}
+
+header {
+  background: #237a39;
+  color: white;
+  text-align: center;
+  padding: 18px;
+}
+
+header h1 {
+  margin: 5px;
+}
+
+nav {
+  background: #185b2a;
+  text-align: center;
+  padding: 12px;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 14px;
+  margin: 4px;
+}
+
+nav button {
+  background: white;
+  color: #185b2a;
+  font-weight: bold;
+}
+
+.container {
+  width: 92%;
+  max-width: 1050px;
+  margin: 25px auto;
+}
+
+.panel {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px #00000012;
+}
+
+.login {
+  max-width: 400px;
+  margin: 40px auto;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.btn {
+  background: #27833d;
+  color: white;
+}
+
+.btn:hover {
+  background: #195b2a;
+}
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 18px;
+}
+
+.product {
+  background: white;
+  padding: 18px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 2px 10px #00000010;
+}
+
+.emoji {
+  font-size: 52px;
+}
+
+.price {
+  color: #237a39;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.search-box {
+  max-width: 500px;
+  margin-bottom: 20px;
+}
+
+.cart-row {
+  padding: 14px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.total {
+  color: #237a39;
+}
+
+footer {
+  margin-top: 35px;
+  padding: 18px;
+  text-align: center;
+  background: #185b2a;
+  color: white;
+}
+
+.status-step {
+  padding: 13px;
+  margin: 9px 0;
+  border-radius: 7px;
+  background: #eeeeee;
+}
+
+.status-step.active {
+  background: #d9f3dc;
+  border: 1px solid #27833d;
+  font-weight: bold;
+}
+
+.bill {
+  border: 1px solid #bbb;
+  padding: 20px;
+  border-radius: 8px;
+  background: white;
+}
+
+.bill table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+}
+
+.bill th, .bill td {
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+  padding: 9px 5px;
+}
+
+.bill th:last-child, .bill td:last-child {
+  text-align: right;
+}
+
+.message {
+  color: #237a39;
+  font-weight: bold;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #billContent, #billContent * {
+    visibility: visible;
+  }
+
+  #billContent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🥬 GreenVeg Market</h1>
+  <p>Farmer to Customer – Green Vegetable Transaction Website</p>
+</header>
+
+<nav id="navbar" class="hidden">
+  <button onclick="showPage('shop')">Vegetables</button>
+  <button onclick="showPage('cart')">
+    My Cart (<span id="cartCount">0</span>)
+  </button>
+  <button onclick="showPage('tracking')">Track Order</button>
+  <button onclick="showPage('bill')">My Bill</button>
+  <button onclick="logout()">Logout</button>
+</nav>
+
+<!-- LOGIN PAGE -->
+<section id="loginPage" class="container">
+  <div class="panel login">
+    <h2>Customer Login</h2>
+    <p>Buy fresh vegetables directly from farmers.</p>
+
+    <label>Email Address</label>
+    <input type="email" id="email" placeholder="Enter email">
+
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter password">
+
+    <button class="btn" style="width:100%" onclick="login()">
+      Login
+    </button>
+
+    <p id="loginMessage"></p>
+
+    <hr>
+    <small>
+      Demo Email: customer@gmail.com<br>
+      Demo Password: 12345
+    </small>
+  </div>
+</section>
+
+<!-- VEGETABLE SHOP -->
+<section id="shopPage" class="container hidden">
+  <h2>Fresh Vegetables 🥦</h2>
+  <p>Choose fresh vegetables from our local farmers.</p>
+
+  <input
+    class="search-box"
+    id="searchInput"
+    type="search"
+    placeholder="🔍 Search vegetables..."
+    oninput="renderProducts()"
+  >
+
+  <div id="products" class="products"></div>
+  <p id="noProducts" class="hidden">No vegetables found.</p>
+</section>
+
+<!-- CART -->
+<section id="cartPage" class="container hidden">
+  <div class="panel">
+    <h2>🛒 My Shopping Cart</h2>
+    <div id="cartItems"></div>
+    <h3 id="cartTotal" class="total">Total: ₹0</h3>
+
+    <button class="btn" onclick="showPage('shop')">
+      Continue Shopping
+    </button>
+    <button class="btn" onclick="checkout()">
+      Proceed to Checkout
+    </button>
+  </div>
+</section>
+
+<!-- CHECKOUT -->
+<section id="checkoutPage" class="container hidden">
+  <div class="panel">
+    <h2>Delivery Details</h2>
+
+    <label>Customer Name</label>
+    <input id="customerName" placeholder="Enter full name">
+
+    <label>Mobile Number</label>
+    <input id="mobile" type="tel" placeholder="Enter mobile number">
+
+    <label>Delivery Address</label>
+    <textarea id="address" placeholder="Enter complete address"></textarea>
+
+    <p><b>Payment:</b> Cash on Delivery</p>
+    <div id="checkoutTotal"></div>
+
+    <button class="btn" onclick="confirmOrder()">
+      Confirm Order
+    </button>
+    <button class="btn" onclick="showPage('cart')">
+      Back to Cart
+    </button>
+
+    <p id="checkoutMessage"></p>
+  </div>
+</section>
+
+<!-- ORDER TRACKING -->
+<section id="trackingPage" class="container hidden">
+  <div class="panel">
+    <h2>🚚 Order Tracking</h2>
+
+    <label>Enter Order ID</label>
+    <input id="trackingInput" placeholder="Example: GV1001">
+
+    <button class="btn" onclick="trackOrder()">
+      Track My Order
+    </button>
+
+    <div id="trackingResult"></div>
+  </div>
+</section>
+
+<!-- BILL PAGE -->
+<section id="billPage" class="container hidden">
+  <h2>🧾 Order Bill</h2>
+
+  <div id="billContent" class="bill">
+    <p>No order bill available yet. Please place an order first.</p>
+  </div>
+
+  <div class="no-print">
+    <button class="btn" onclick="window.print()">
+      Print / Save Bill as PDF
+    </button>
+    <button class="btn" onclick="showPage('shop')">
+      Continue Shopping
+    </button>
+  </div>
+</section>
+
+<!-- ORDER SUCCESS -->
+<section id="successPage" class="container hidden">
+  <div class="panel" style="text-align:center">
+    <div style="font-size:60px">✅</div>
+    <h2>Order Placed Successfully!</h2>
+    <p>Thank you for shopping with GreenVeg Market.</p>
+    <p id="successDetails"></p>
+
+    <button class="btn" onclick="showPage('tracking')">
+      Track Your Order
+    </button>
+    <button class="btn" onclick="showPage('bill')">
+      View / Print Bill
+    </button>
+    <button class="btn" onclick="showPage('shop')">
+      Buy More Vegetables
+    </button>
+  </div>
+</section>
+
+<footer>
+  <p>GreenVeg Market | Fresh Vegetables from Farmers to Customers</p>
+</footer>
+
+<script>
+const vegetables = [
+  { name: "Tomato", emoji: "🍅", price: 30, farmer: "Rahul Farmer" },
+  { name: "Potato", emoji: "🥔", price: 25, farmer: "Amit Farmer" },
+  { name: "Carrot", emoji: "🥕", price: 40, farmer: "Suresh Farmer" },
+  { name: "Broccoli", emoji: "🥦", price: 60, farmer: "Ravi Farmer" },
+  { name: "Onion", emoji: "🧅", price: 35, farmer: "Ganesh Farmer" },
+  { name: "Leafy Greens", emoji: "🥬", price: 20, farmer: "Sunil Farmer" },
+  { name: "Cucumber", emoji: "🥒", price: 30, farmer: "Vijay Farmer" },
+  { name: "Corn", emoji: "🌽", price: 35, farmer: "Kiran Farmer" }
+];
+
+let cart = [];
+let orders = [];
+let currentOrder = null;
+let nextOrderNumber = 1001;
+
+const deliveryCharge = 20;
+
+function login() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("loginMessage");
+
+  if (email === "customer@gmail.com" && password === "12345") {
+    document.getElementById("navbar").classList.remove("hidden");
+    message.textContent = "";
+    document.getElementById("searchInput").value = "";
+    renderProducts();
+    showPage("shop");
+  } else {
+    message.style.color = "red";
+    message.textContent = "Invalid email or password. Try again.";
+  }
+}
+
+function showPage(page) {
+  const pageIds = [
+    "loginPage", "shopPage", "cartPage", "checkoutPage",
+    "trackingPage", "billPage", "successPage"
+  ];
+
+  pageIds.forEach(id =>
+    document.getElementById(id).classList.add("hidden")
+  );
+
+  document.getElementById(page + "Page").classList.remove("hidden");
+
+  if (page === "cart") renderCart();
+  if (page === "shop") renderProducts();
+  if (page === "bill") renderBill();
+
+  window.scrollTo(0, 0);
+}
+
+// SEARCH VEGETABLE
+function renderProducts() {
+  const container = document.getElementById("products");
+  const search = document.getElementById("searchInput").value
+    .trim().toLowerCase();
+
+  const filtered = vegetables.filter(v =>
+    v.name.toLowerCase().includes(search) ||
+    v.farmer.toLowerCase().includes(search)
+  );
+
+  container.innerHTML = "";
+
+  filtered.forEach(v => {
+    const index = vegetables.indexOf(v);
+
+    container.innerHTML += `
+      <div class="product">
+        <div class="emoji">${v.emoji}</div>
+        <h3>${v.name}</h3>
+        <p>Farmer: ${v.farmer}</p>
+        <p class="price">₹${v.price} / kg</p>
+        <button class="btn" onclick="addToCart(${index})">
+          Add to Cart
+        </button>
+      </div>`;
+  });
+
+  document.getElementById("noProducts")
+    .classList.toggle("hidden", filtered.length !== 0);
+}
+
+function addToCart(index) {
+  const vegetable = vegetables[index];
+  const item = cart.find(v => v.name === vegetable.name);
+
+  if (item) {
+    item.qty++;
+  } else {
+    cart.push({ ...vegetable, qty: 1 });
+  }
+
+  updateCartCount();
+  alert(vegetable.name + " added to cart!");
+}
+
+function updateCartCount() {
+  const count = cart.reduce((sum, item) => sum + item.qty, 0);
+  document.getElementById("cartCount").textContent = count;
+}
+
+function getSubtotal() {
+  return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+}
+
+function getDeliveryCharge(subtotal) {
+  return subtotal >= 200 ? 0 : deliveryCharge;
+}
+
+function renderCart() {
+  const container = document.getElementById("cartItems");
+  container.innerHTML = "";
+
+  if (cart.length === 0) {
+    container.innerHTML = "<p>Your cart is empty.</p>";
+    document.getElementById("cartTotal").textContent = "Total: ₹0";
+    return;
+  }
+
+  cart.forEach((item, index) => {
+    container.innerHTML += `
+      <div class="cart-row">
+        <b>${item.emoji} ${item.name}</b><br>
+        ₹${item.price} × ${item.qty} kg = ₹${item.price * item.qty}
+        <br>
+        <button class="btn" onclick="changeQty(${index}, -1)">−</button>
+        <button class="btn" onclick="changeQty(${index}, 1)">+</button>
+        <button class="btn" onclick="removeItem(${index})">Remove</button>
+      </div>`;
+  });
+
+  const subtotal = getSubtotal();
+  const delivery = getDeliveryCharge(subtotal);
+  const total = subtotal + delivery;
+
+  document.getElementById("cartTotal").innerHTML =
+    `Subtotal: ₹${subtotal}<br>
+     Delivery: ${delivery === 0 ? "FREE" : "₹" + delivery}<br>
+     <span class="total">Grand Total: ₹${total}</span>`;
+}
+
+function changeQty(index, amount) {
+  cart[index].qty += amount;
+
+  if (cart[index].qty <= 0) {
+    cart.splice(index, 1);
+  }
+
+  updateCartCount();
+  renderCart();
+}
+
+function removeItem(index) {
+  cart.splice(index, 1);
+  updateCartCount();
+  renderCart();
+}
+
+function checkout() {
+  if (cart.length === 0) {
+    alert("Your cart is empty. Please add vegetables first.");
+    return;
+  }
+
+  const subtotal = getSubtotal();
+  const delivery = getDeliveryCharge(subtotal);
+
+  document.getElementById("checkoutTotal").innerHTML =
+    `<h3>Subtotal: ₹${subtotal}</h3>
+     <p>Delivery Charge: ${delivery === 0 ? "FREE" : "₹" + delivery}</p>
+     <h3>Grand Total: ₹${subtotal + delivery}</h3>`;
+
+  document.getElementById("checkoutMessage").textContent = "";
+  showPage("checkout");
+}
+
+function confirmOrder() {
+  const name = document.getElementById("customerName").value.trim();
+  const mobile = document.getElementById("mobile").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const message = document.getElementById("checkoutMessage");
+
+  if (!name || !mobile || !address) {
+    message.style.color = "red";
+    message.textContent = "Please fill in all delivery details.";
+    return;
+  }
+
+  if (!/^[0-9]{10}$/.test(mobile)) {
+    message.style.color = "red";
+    message.textContent = "Please enter a valid 10-digit mobile number.";
+    return;
+  }
+
+  if (cart.length === 0) {
+    message.style.color = "red";
+    message.textContent = "Your cart is empty.";
+    return;
+  }
+
+  const subtotal = getSubtotal();
+  const delivery = getDeliveryCharge(subtotal);
+
+  const order = {
+    id: "GV" + nextOrderNumber++,
+    name,
+    mobile,
+    address,
+    items: cart.map(item => ({ ...item })),
+    subtotal,
+    delivery,
+    total: subtotal + delivery,
+    date: new Date().toLocaleString("en-IN"),
+    statusIndex: 0
+  };
+
+  orders.push(order);
+  currentOrder = order;
+
+  cart = [];
+  updateCartCount();
+
+  document.getElementById("customerName").value = "";
+  document.getElementById("mobile").value = "";
+  document.getElementById("address").value = "";
+
+  document.getElementById("successDetails").innerHTML =
+    `Order ID: <b>${order.id}</b><br>
+     Total Amount: <b>₹${order.total}</b><br>
+     Payment: Cash on Delivery`;
+
+  showPage("success");
+}
+
+// ORDER TRACKING
+const orderStatuses = [
+  "Order Placed",
+  "Processing",
+  "Out for Delivery",
+  "Delivered"
+];
+
+function trackOrder() {
+  const id = document.getElementById("trackingInput")
+    .value.trim().toUpperCase();
+
+  const result = document.getElementById("trackingResult");
+  const order = orders.find(o => o.id === id);
+
+  if (!order) {
+    result.innerHTML =
+      "<p style='color:red'>Order not found. Check your Order ID.</p>";
+    return;
+  }
+
+  let html = `
+    <h3>Order ID: ${order.id}</h3>
+    <p>Customer: ${order.name}</p>
+    <p>Order Date: ${order.date}</p>
+    <p>Amount: ₹${order.total}</p>
+    <h3>Delivery Status</h3>`;
+
+  orderStatuses.forEach((status, index) => {
+    const active = index <= order.statusIndex ? "active" : "";
+
+    html += `
+      <div class="status-step ${active}">
+        ${index <= order.statusIndex ? "✅" : "○"} ${status}
+      </div>`;
+  });
+
+  html += `<p><b>Current Status:</b> ${orderStatuses[order.statusIndex]}</p>`;
+
+  // Demo control: allows testing each tracking stage.
+  if (order.statusIndex < orderStatuses.length - 1) {
+    html += `
+      <button class="btn" onclick="advanceTracking('${order.id}')">
+        Demo: Move to Next Status
+      </button>`;
+  }
+
+  result.innerHTML = html;
+}
+
+function advanceTracking(id) {
+  const order = orders.find(o => o.id === id);
+  if (!order) return;
+
+  if (order.statusIndex < orderStatuses.length - 1) {
+    order.statusIndex++;
+  }
+
+  document.getElementById("trackingInput").value = order.id;
+  trackOrder();
+}
+
+// BILL GENERATION
+function renderBill() {
+  const bill = document.getElementById("billContent");
+
+  if (!currentOrder) {
+    bill.innerHTML = "<p>No order bill available yet. Please place an order first.</p>";
+    return;
+  }
+
+  const order = currentOrder;
+
+  let rows = "";
+
+  order.items.forEach(item => {
+    rows += `
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.qty} kg</td>
+        <td>₹${item.price}</td>
+        <td>₹${item.price * item.qty}</td>
+      </tr>`;
+  });
+
+  bill.innerHTML = `
+    <div style="text-align:center">
+      <h2>🥬 GreenVeg Market</h2>
+      <p>Fresh Vegetables Directly from Farmers</p>
+      <h3>ORDER BILL / RECEIPT</h3>
+    </div>
+
+    <hr>
+
+    <p><b>Order ID:</b> ${order.id}</p>
+    <p><b>Order Date:</b> ${order.date}</p>
+    <p><b>Customer:</b> ${order.name}</p>
+    <p><b>Mobile:</b> ${order.mobile}</p>
+    <p><b>Delivery Address:</b> ${order.address}</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Vegetable</th>
+          <th>Quantity</th>
+          <th>Rate</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <p style="text-align:right">
+      Subtotal: ₹${order.subtotal}<br>
+      Delivery Charge: ${order.delivery === 0 ? "FREE" : "₹" + order.delivery}
+    </p>
+
+    <h3 style="text-align:right">Grand Total: ₹${order.total}</h3>
+
+    <p><b>Payment Method:</b> Cash on Delivery</p>
+    <p><b>Order Status:</b> ${orderStatuses[order.statusIndex]}</p>
+
+    <hr>
+    <p style="text-align:center">Thank you for shopping with us!</p>`;
+}
+
+function logout() {
+  cart = [];
+  updateCartCount();
+
+  document.getElementById("navbar").classList.add("hidden");
+  document.getElementById("email").value = "";
+  document.getElementById("password").value = "";
+  document.getElementById("loginMessage").textContent = "";
+
+  showPage("login");
+}
+</script>
+
+</body>
+</html>
